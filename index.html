@@ -1,17 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
+
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>RSS Агрегатор</title>
+    <link rel="stylesheet" href="src/styles/style.css">
 </head>
+
 <body>
-    <div class="container mt-5">
-        <h1 class="mb-4">RSS Reader</h1>
-        <form id="rss-form" class="d-flex">
-            <input type="text" placeholder="Введите ссылку на RSS" />
-            <button type="submit">Добавить</button>
-        </form>
-        <div id="rss-list" class="mt-3"></div>
+<main>
+    <section>
+        <div class="container-fluid">
+            <h1>RSS агрегатор</h1>
+            <p>Начните читать RSS сегодня! Это легко, это красиво.</p>
+
+            <form class="rss-form">
+                <label for="url-input">Ссылка RSS</label>
+                <input type="text" name="url" id="url-input" placeholder="https://example.com/feed">
+                <button type="submit">Добавить</button>
+            </form>
+
+            <p class="text-muted">Пример: https://lorem-rss.hexlet.app/feed</p>
+            <p class="feedback"></p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="footer">
+        <p>Created by Me</p>
     </div>
+</footer>
+
+<script type="module" src="src/index.js"></script>
 </body>
+
 </html>
