@@ -7,6 +7,7 @@ export default {
         required: 'Не должно быть пустым',
         duplicate: 'RSS уже существует',
         invalidRss: 'Ресурс не содержит валидный RSS',
+        network: 'Ошибка сети',
       },
     },
     form: {
