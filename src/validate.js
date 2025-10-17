@@ -1,35 +1,65 @@
 import * as yup from 'yup';
 import i18next from 'i18next';
+import onChange from 'on-change';
 import ru from './locales/locales.js';
-import { loadRss } from './api.js';
+import loadRss from './api.js';
 import parse from './parser.js';
 import { renderFeeds, renderPosts, bindPostsInteractions } from './view.js';
-import onChange from 'on-change';
 
 const genId = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 
 function renderAllTexts(i18n) {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
-    const key = el.dataset.i18n;
-    // если нужен атрибут, можно расширить синтаксис, но нам хватает textContent
-    el.textContent = i18n.t(key);
+    const { i18n: key } = el.dataset;
+    el.replaceChildren(document.createTextNode(i18n.t(key)));
   });
 
-  // placeholder инпута и title вкладки — отдельные ключи
   const input = document.getElementById('url-input');
   if (input) input.setAttribute('placeholder', i18n.t('form.placeholder'));
-
   document.title = i18n.t('title');
 }
+
+const knownLinksByFeed = (state, feedId) => new Set(
+  state.posts.filter((p) => p.feedId === feedId).map((p) => p.link),
+);
+
+const refreshFeed = (state, feed) => loadRss(feed.url)
+  .then((xml) => parse(xml))
+  .then(({ posts }) => {
+    const known = knownLinksByFeed(state, feed.id);
+    const fresh = posts
+      .filter((p) => !known.has(p.link))
+      .map((p) => ({
+        id: genId(),
+        feedId: feed.id,
+        title: p.title,
+        link: p.link,
+        description: p.description,
+      }));
+
+    if (fresh.length) {
+      state.posts = [...fresh, ...state.posts];
+    }
+  })
+  .catch(() => {});
+
+const startPolling = (state) => {
+  const tick = () => {
+    const jobs = state.feeds.map((f) => refreshFeed(state, f));
+    Promise.all(jobs)
+      .finally(() => {
+        setTimeout(tick, 5000);
+      });
+  };
+  setTimeout(tick, 5000);
+};
 
 export default () => {
   const i18n = i18next.createInstance();
 
   i18n.init({ lng: 'ru', debug: false, resources: { ru } }).then(() => {
-    // 1) РЕНДЕР ВСЕХ UI-ТЕКСТОВ ЧЕРЕЗ data-i18n
     renderAllTexts(i18n);
 
-    // 2) yup → i18n
     yup.setLocale({
       string: { url: i18n.t('feedback.errors.invalidUrl') },
       mixed: { required: i18n.t('feedback.errors.required') },
@@ -52,6 +82,8 @@ export default () => {
     });
 
     bindPostsInteractions(postsBox, state);
+
+    startPolling(state);
 
     const setError = (text) => {
       input.classList.add('is-invalid');
@@ -80,15 +112,18 @@ export default () => {
 
       schema.validate(raw)
         .then((validated) => {
-          let normalized = validated;
-          try { normalized = new URL(validated).toString(); } catch {}
+          let normalized;
+          try {
+            normalized = new URL(validated).toString();
+          } catch (err) {
+            normalized = validated;
+          }
           if (state.urls.has(normalized)) {
             throw new Error(i18n.t('feedback.errors.duplicate'));
           }
           return normalized;
         })
-        .then((normalized) => loadRss(normalized)
-          .then((xml) => ({ normalized, xml })))
+        .then((normalized) => loadRss(normalized).then((xml) => ({ normalized, xml })))
         .then(({ normalized, xml }) => {
           const { feed, posts } = parse(xml);
 
@@ -105,7 +140,7 @@ export default () => {
           }));
           state.posts = [...preparedPosts, ...state.posts];
 
-          setSuccess(i18n.t('feedback.success', 'RSS успешно добавлен'));
+          setSuccess(i18n.t('feedback.success', 'RSS успешно загружен'));
           form.reset();
           input.focus();
         })

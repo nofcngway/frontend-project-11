@@ -8,6 +8,5 @@ const makeUrl = (url) => {
   return u.toString();
 };
 
-export const loadRss = (url) =>
-  axios.get(makeUrl(url))
-    .then((resp) => resp.data.contents);
+export default (url) => axios.get(makeUrl(url))
+  .then((resp) => resp.data.contents);
