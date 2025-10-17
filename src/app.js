@@ -1,6 +1,7 @@
+// eslint-disable-next-line import/no-unresolved
+import onChange from 'on-change';
 import * as yup from 'yup';
 import i18next from 'i18next';
-import onChange from 'on-change';
 import ru from './locales/locales.js';
 import loadRss from './api.js';
 import parse from './parser.js';
@@ -38,6 +39,7 @@ const refreshFeed = (state, feed) => loadRss(feed.url)
       }));
 
     if (fresh.length) {
+      // eslint-disable-next-line no-param-reassign
       state.posts = [...fresh, ...state.posts];
     }
   })

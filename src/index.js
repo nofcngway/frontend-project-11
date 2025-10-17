@@ -1,4 +1,4 @@
-import runApp from './validate.js';
+import runApp from './app.js';
 import 'bootstrap';
 
 runApp();
