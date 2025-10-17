@@ -6,7 +6,7 @@ import loadRss from './api.js';
 import parse from './parser.js';
 import { renderFeeds, renderPosts, bindPostsInteractions } from './view.js';
 
-const genId = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const genId = () => crypto.randomUUID();
 
 function renderAllTexts(i18n) {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
