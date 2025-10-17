@@ -1,7 +1,7 @@
-export default  {
+export default {
   translation: {
     feedback: {
-      success: '',
+      success: 'RSS успешно добавлен',
       errors: {
         invalidUrl: 'Ссылка должна быть валидным URL',
         required: 'Не должно быть пустым',
@@ -17,5 +17,12 @@ export default  {
     title: 'RSS агрегатор',
     description: 'Начните читать RSS сегодня! Это легко, это красиво.',
     example: 'Пример: https://lorem-rss.hexlet.app/feed',
+    modal: {
+      readFull: 'Читать полностью',
+      close: 'Закрыть',
+    },
+    footer: {
+      madeBy: 'created by',
+    },
   }
 };
