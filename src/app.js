@@ -43,17 +43,21 @@ const refreshFeed = (state, feed) => loadRss(feed.url)
       state.posts = [...fresh, ...state.posts];
     }
   })
-  .catch((err) => console.warn('Feed refresh failed:', err));
+  .catch((err) => {
+    console.warn('Feed refresh failed:', err);
+  });
 
 const startPolling = (state) => {
+  const POLL_INTERVAL_MS = 5000;
+
   const tick = () => {
     const jobs = state.feeds.map((f) => refreshFeed(state, f));
     Promise.all(jobs)
       .finally(() => {
-        setTimeout(tick, 5000);
+        setTimeout(tick, POLL_INTERVAL_MS);
       });
   };
-  setTimeout(tick, 5000);
+  setTimeout(tick, POLL_INTERVAL_MS);
 };
 
 export default () => {
@@ -125,7 +129,14 @@ export default () => {
           }
           return normalized;
         })
-        .then((normalized) => loadRss(normalized).then((xml) => ({ normalized, xml })))
+        .then((normalized) => loadRss(normalized)
+          .then((xml) => ({ normalized, xml }))
+          .catch((loadError) => {
+            const error = new Error('invalidRss');
+            error.isParseError = true;
+            error.originalError = loadError;
+            throw error;
+          }))
         .then(({ normalized, xml }) => {
           const { feed, posts } = parse(xml);
 
@@ -151,10 +162,17 @@ export default () => {
             setError(i18n.t('feedback.errors.invalidRss'));
             return;
           }
+
           if (err.isAxiosError) {
+            if (err.response && err.response.status >= 400) {
+              setError(i18n.t('feedback.errors.invalidRss'));
+              return;
+            }
             setError(i18n.t('feedback.errors.network', 'Ошибка сети'));
             return;
           }
+
+          // Для всех остальных ошибок
           setError(err.message);
         });
     });

@@ -1,36 +1,79 @@
 /* eslint-disable no-param-reassign */
+const createElement = (tag, options = {}) => {
+  const el = document.createElement(tag);
+
+  if (options.className) {
+    el.className = options.className;
+  }
+
+  if (options.textContent) {
+    el.textContent = options.textContent;
+  }
+
+  if (options.href) {
+    el.href = options.href;
+  }
+
+  if (options.target) {
+    el.target = options.target;
+  }
+
+  if (options.rel) {
+    el.rel = options.rel;
+  }
+
+  if (options.type) {
+    el.type = options.type;
+  }
+
+  if (options.dataset) {
+    Object.entries(options.dataset).forEach(([key, value]) => {
+      el.dataset[key] = value;
+    });
+  }
+
+  return el;
+};
+
+const createCard = (title) => {
+  const card = createElement('div', { className: 'card border-0' });
+  const body = createElement('div', { className: 'card-body' });
+  const h2 = createElement('h2', {
+    className: 'card-title h4',
+    textContent: title,
+  });
+
+  body.append(h2);
+
+  const list = createElement('ul', {
+    className: 'list-group border-0 rounded-0',
+  });
+
+  return { card, body, list };
+};
+
 export const renderFeeds = (container, feeds) => {
   container.innerHTML = '';
   if (!feeds.length) return;
 
-  const card = document.createElement('div');
-  card.className = 'card border-0';
+  const { card, body, list } = createCard('Фиды');
 
-  const body = document.createElement('div');
-  body.className = 'card-body';
+  feeds.forEach((feed) => {
+    const li = createElement('li', {
+      className: 'list-group-item border-0 border-end-0',
+    });
 
-  const h2 = document.createElement('h2');
-  h2.className = 'card-title h4';
-  h2.textContent = 'Фиды';
+    const title = createElement('h3', {
+      className: 'h6 m-0',
+      textContent: feed.title,
+    });
 
-  body.append(h2);
+    const description = createElement('p', {
+      className: 'm-0 small text-black-50',
+      textContent: feed.description,
+    });
 
-  const list = document.createElement('ul');
-  list.className = 'list-group border-0 rounded-0';
-
-  feeds.forEach((f) => {
-    const li = document.createElement('li');
-    li.className = 'list-group-item border-0 border-end-0';
-
-    const title = document.createElement('h3');
-    title.className = 'h6 m-0';
-    title.textContent = f.title;
-
-    const desc = document.createElement('p');
-    desc.className = 'm-0 small text-black-50';
-    desc.textContent = f.description;
-
-    li.append(title, desc);
+    li.append(title, description);
     list.append(li);
   });
 
@@ -42,42 +85,36 @@ export const renderPosts = (container, posts, state) => {
   container.innerHTML = '';
   if (!posts.length) return;
 
-  const card = document.createElement('div');
-  card.className = 'card border-0';
+  const { card, body, list } = createCard('Посты');
 
-  const body = document.createElement('div');
-  body.className = 'card-body';
+  posts.forEach((post) => {
+    const li = createElement('li', {
+      className: 'list-group-item d-flex justify-content-between align-items-start border-0 border-end-0',
+    });
 
-  const h2 = document.createElement('h2');
-  h2.className = 'card-title h4';
-  h2.textContent = 'Посты';
+    const isRead = state.ui.read.has(post.id);
 
-  body.append(h2);
+    const link = createElement('a', {
+      href: post.link,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      className: isRead ? 'fw-normal link-secondary' : 'fw-bold',
+      textContent: post.title,
+      dataset: { id: post.id },
+    });
 
-  const list = document.createElement('ul');
-  list.className = 'list-group border-0 rounded-0';
+    const button = createElement('button', {
+      type: 'button',
+      className: 'btn btn-outline-primary btn-sm',
+      textContent: 'Просмотр',
+      dataset: {
+        id: post.id,
+        bsToggle: 'modal',
+        bsTarget: '#modal',
+      },
+    });
 
-  posts.forEach((p) => {
-    const li = document.createElement('li');
-    li.className = 'list-group-item d-flex justify-content-between align-items-start border-0 border-end-0';
-
-    const a = document.createElement('a');
-    a.href = p.link;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.dataset.id = p.id;
-    a.className = state.ui.read.has(p.id) ? 'fw-normal link-secondary' : 'fw-bold';
-    a.textContent = p.title;
-
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn btn-outline-primary btn-sm';
-    btn.dataset.id = p.id;
-    btn.dataset.bsToggle = 'modal';
-    btn.dataset.bsTarget = '#modal';
-    btn.textContent = 'Просмотр';
-
-    li.append(a, btn);
+    li.append(link, button);
     list.append(li);
   });
 
@@ -85,38 +122,44 @@ export const renderPosts = (container, posts, state) => {
   container.append(card);
 };
 
+const markAsRead = (container, postId) => {
+  const link = container.querySelector(`a[data-id="${postId}"]`);
+  if (link) {
+    link.classList.remove('fw-bold');
+    link.classList.add('fw-normal', 'link-secondary');
+  }
+};
+
+const showModal = (post) => {
+  const titleEl = document.querySelector('#modal .modal-title');
+  const bodyEl = document.querySelector('#modal .modal-body');
+  const linkEl = document.querySelector('#modal .full-article');
+
+  if (titleEl) titleEl.textContent = post.title;
+  if (bodyEl) bodyEl.textContent = post.description;
+  if (linkEl) linkEl.href = post.link;
+};
+
 export const bindPostsInteractions = (container, state) => {
   container.addEventListener('click', (e) => {
     const link = e.target.closest('a[data-id]');
-    const btn = e.target.closest('button[data-id]');
+    const button = e.target.closest('button[data-id]');
 
     if (link) {
       const { id } = link.dataset;
       state.ui.read.add(id);
-      link.classList.remove('fw-bold');
-      link.classList.add('fw-normal', 'link-secondary');
+      markAsRead(container, id);
       return;
     }
 
-    if (btn) {
-      const { id } = btn.dataset;
+    if (button) {
+      const { id } = button.dataset;
       const post = state.posts.find((p) => p.id === id);
       if (!post) return;
 
-      const titleEl = document.querySelector('#modal .modal-title');
-      const bodyEl = document.querySelector('#modal .modal-body');
-      const fullEl = document.querySelector('#modal .full-article');
-
-      if (titleEl) titleEl.textContent = post.title;
-      if (bodyEl) bodyEl.textContent = post.description;
-      if (fullEl) fullEl.href = post.link;
-
+      showModal(post);
       state.ui.read.add(id);
-      const a = container.querySelector(`a[data-id="${id}"]`);
-      if (a) {
-        a.classList.remove('fw-bold');
-        a.classList.add('fw-normal', 'link-secondary');
-      }
+      markAsRead(container, id);
     }
   });
 };
