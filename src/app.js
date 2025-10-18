@@ -43,7 +43,7 @@ const refreshFeed = (state, feed) => loadRss(feed.url)
       state.posts = [...fresh, ...state.posts];
     }
   })
-  .catch(() => {});
+  .catch((err) => console.warn('Feed refresh failed:', err));
 
 const startPolling = (state) => {
   const tick = () => {
