@@ -163,14 +163,7 @@ export default () => {
             return;
           }
 
-          if (err.isAxiosError && err.response && err.response.status >= 400) {
-            setError(i18n.t('feedback.errors.invalidRss'));
-            return;
-          }
-
-          const isNetwork = (err.isAxiosError && (!err.response || err.code === 'ERR_NETWORK')) || err.message === 'Network Error' || err.name === 'TypeError';
-
-          if (isNetwork) {
+          if (err.isAxiosError) {
             setError(i18n.t('feedback.errors.network', 'Ошибка сети'));
             return;
           }
