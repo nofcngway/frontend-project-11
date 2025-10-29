@@ -9,6 +9,13 @@ export default (xmlString) => {
     throw error;
   }
 
+  const channel = doc.querySelector('channel');
+  if (!channel) {
+    const error = new Error('invalidRss');
+    error.isParseError = true;
+    throw error;
+  }
+
   const feedTitle = doc.querySelector('channel > title')?.textContent?.trim() ?? '';
   const feedDescription = doc.querySelector('channel > description')?.textContent?.trim() ?? '';
 
