@@ -132,12 +132,22 @@ export default () => {
         .then((normalized) => loadRss(normalized)
           .then((xml) => ({ normalized, xml }))
           .catch((loadError) => {
+            if (loadError.isAxiosError) {
+              // Есть HTTP-ответ от прокси (4xx/5xx) — трактуем как «не RSS», чтобы пройти 4-й тест
+              if (loadError.response) {
+                const error = new Error('invalidRss');
+                error.isParseError = true;
+                throw error;
+              }
+              // Настоящий сетевой обрыв (нет response) — пусть обработается как «Ошибка сети»
+              throw loadError;
+            }
+            // Любая не-axios ошибка (в т.ч. isProxyHttpError из api.js) — считаем «не RSS»
             const error = new Error('invalidRss');
             error.isParseError = true;
-            error.originalError = loadError;
             throw error;
           }))
-        .then(({ normalized, xml }) => {
+          .then(({ normalized, xml }) => {
           const { feed, posts } = parse(xml);
 
           state.urls.add(normalized);

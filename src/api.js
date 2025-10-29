@@ -12,8 +12,9 @@ export default (url) => axios.get(makeUrl(url))
   .then((resp) => {
     const { contents, status } = resp.data ?? {};
     if (status && typeof status.http_code === 'number' && status.http_code !== 200) {
+      // ВАЖНО: не делаем isAxiosError — это не сетевой обрыв, а «целевой ресурс не ок»
       const err = new Error(`Proxy HTTP ${status.http_code}`);
-      err.isAxiosError = true;
+      err.isProxyHttpError = true; // пометим явно (не обязательно, но удобно)
       throw err;
     }
     return contents;
