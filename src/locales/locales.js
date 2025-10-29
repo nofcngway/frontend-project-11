@@ -26,4 +26,4 @@ export default {
       madeBy: 'created by',
     },
   },
-};
+}

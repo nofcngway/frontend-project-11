@@ -1,4 +1,4 @@
-import runApp from './app.js';
-import 'bootstrap';
+import runApp from './app.js'
+import 'bootstrap'
 
-runApp();
+runApp()
