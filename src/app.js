@@ -130,13 +130,7 @@ export default () => {
           return normalized;
         })
         .then((normalized) => loadRss(normalized)
-          .then((xml) => ({ normalized, xml }))
-          .catch((loadError) => {
-            const error = new Error('invalidRss');
-            error.isParseError = true;
-            error.originalError = loadError;
-            throw error;
-          }))
+          .then((xml) => ({ normalized, xml })))
         .then(({ normalized, xml }) => {
           const { feed, posts } = parse(xml);
 
