@@ -140,6 +140,7 @@ export default () => {
             throw loadError;
           })
           .then((xml) => {
+            // Парсим XML и проверяем, что это валидный RSS
             const parsed = parse(xml);
             return { normalized, parsed };
           }))
@@ -164,13 +165,21 @@ export default () => {
           input.focus();
         })
         .catch((err) => {
+          // Сначала проверяем ошибку сети
           if (err.isNetworkError || err.isAxiosError) {
             setError(i18n.t('feedback.errors.network', 'Ошибка сети'));
             return;
           }
 
+          // Проверяем ошибку парсинга
           if (err.isParseError || err.message === 'invalidRss') {
             setError(i18n.t('feedback.errors.invalidRss'));
+            return;
+          }
+
+          // ValidationError от yup
+          if (err.name === 'ValidationError') {
+            setError(err.message);
             return;
           }
 
