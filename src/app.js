@@ -132,6 +132,12 @@ export default () => {
         .then((normalized) => loadRss(normalized)
           .then((xml) => ({ normalized, xml }))
           .catch((loadError) => {
+            if (loadError.isAxiosError) {
+              const error = new Error('networkError');
+              error.isNetworkError = true;
+              error.originalError = loadError;
+              throw error;
+            }
             const error = new Error('invalidRss');
             error.isParseError = true;
             error.originalError = loadError;
@@ -158,13 +164,13 @@ export default () => {
           input.focus();
         })
         .catch((err) => {
-          if (err.isParseError || err.message === 'invalidRss') {
-            setError(i18n.t('feedback.errors.invalidRss'));
+          if (err.isNetworkError || err.isAxiosError) {
+            setError(i18n.t('feedback.errors.network', 'Ошибка сети'));
             return;
           }
 
-          if (err.isAxiosError) {
-            setError(i18n.t('feedback.errors.network', 'Ошибка сети'));
+          if (err.isParseError || err.message === 'invalidRss') {
+            setError(i18n.t('feedback.errors.invalidRss'));
             return;
           }
 
