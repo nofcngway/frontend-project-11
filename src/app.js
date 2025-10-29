@@ -130,21 +130,21 @@ export default () => {
           return normalized;
         })
         .then((normalized) => loadRss(normalized)
-          .then((xml) => ({ normalized, xml }))
           .catch((loadError) => {
+            // Проверяем, является ли это ошибкой сети
             if (loadError.isAxiosError) {
               const error = new Error('networkError');
               error.isNetworkError = true;
-              error.originalError = loadError;
               throw error;
             }
-            const error = new Error('invalidRss');
-            error.isParseError = true;
-            error.originalError = loadError;
-            throw error;
+            throw loadError;
+          })
+          .then((xml) => {
+            const parsed = parse(xml);
+            return { normalized, parsed };
           }))
-        .then(({ normalized, xml }) => {
-          const { feed, posts } = parse(xml);
+        .then(({ normalized, parsed }) => {
+          const { feed, posts } = parsed;
 
           state.urls.add(normalized);
           const feedId = genId();
