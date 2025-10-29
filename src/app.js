@@ -132,7 +132,7 @@ export default () => {
         .then((normalized) => loadRss(normalized)
           .then((xml) => ({ normalized, xml }))
           .catch((loadError) => {
-            if (loadError.isAxiosError) { // это сетевая ошибка — не трогаем
+            if (loadError.isAxiosError) {
               throw loadError;
             }
             const error = new Error('invalidRss');
