@@ -52,11 +52,11 @@ const startPolling = (state) => {
 
   const tick = () => {
     const jobs = state.feeds.map((f) => refreshFeed(state, f));
-    Promise.all(jobs)
-      .finally(() => {
-        setTimeout(tick, POLL_INTERVAL_MS);
-      });
+    Promise.all(jobs).finally(() => {
+      setTimeout(tick, POLL_INTERVAL_MS);
+    });
   };
+
   setTimeout(tick, POLL_INTERVAL_MS);
 };
 
@@ -88,7 +88,6 @@ export default () => {
     });
 
     bindPostsInteractions(postsBox, state);
-
     startPolling(state);
 
     const setError = (text) => {
@@ -97,12 +96,14 @@ export default () => {
       feedback.classList.remove('text-success');
       feedback.classList.add('text-danger');
     };
+
     const setSuccess = (text) => {
       input.classList.remove('is-invalid');
       feedback.textContent = text;
       feedback.classList.remove('text-danger');
       feedback.classList.add('text-success');
     };
+
     const clearMsg = () => {
       feedback.textContent = '';
       feedback.classList.remove('text-danger', 'text-success');
@@ -121,7 +122,7 @@ export default () => {
           let normalized;
           try {
             normalized = new URL(validated).toString();
-          } catch (err) {
+          } catch {
             normalized = validated;
           }
           if (state.urls.has(normalized)) {
@@ -133,21 +134,18 @@ export default () => {
           .then((xml) => ({ normalized, xml }))
           .catch((loadError) => {
             if (loadError.isAxiosError) {
-              // Есть HTTP-ответ от прокси (4xx/5xx) — трактуем как «не RSS», чтобы пройти 4-й тест
               if (loadError.response) {
                 const error = new Error('invalidRss');
                 error.isParseError = true;
                 throw error;
               }
-              // Настоящий сетевой обрыв (нет response) — пусть обработается как «Ошибка сети»
               throw loadError;
             }
-            // Любая не-axios ошибка (в т.ч. isProxyHttpError из api.js) — считаем «не RSS»
             const error = new Error('invalidRss');
             error.isParseError = true;
             throw error;
           }))
-          .then(({ normalized, xml }) => {
+        .then(({ normalized, xml }) => {
           const { feed, posts } = parse(xml);
 
           state.urls.add(normalized);
