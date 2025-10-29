@@ -173,7 +173,7 @@ export default () => {
           }
 
           setError(err.message);
-        });
+        }))
     });
   });
 };
