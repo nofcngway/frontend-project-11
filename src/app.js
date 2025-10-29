@@ -130,8 +130,18 @@ export default () => {
           return normalized;
         })
         .then((normalized) => loadRss(normalized)
-          .then((xml) => ({ normalized, xml })))
-        .then(({ normalized, xml }) => {
+          .then((normalized) => loadRss(normalized)
+            .then((xml) => ({ normalized, xml }))
+            .catch((loadError) => {
+              if (loadError.isAxiosError) {
+                throw loadError;
+              }
+              const error = new Error('invalidRss');
+              error.isParseError = true;
+              throw error;
+            }))
+
+          .then(({ normalized, xml }) => {
           const { feed, posts } = parse(xml);
 
           state.urls.add(normalized);
