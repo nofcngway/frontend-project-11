@@ -130,22 +130,15 @@ export default () => {
           return normalized;
         })
         .then((normalized) => loadRss(normalized)
+          .then((xml) => ({ normalized, xml }))
           .catch((loadError) => {
-            // Проверяем, является ли это ошибкой сети
-            if (loadError.isAxiosError) {
-              const error = new Error('networkError');
-              error.isNetworkError = true;
-              throw error;
-            }
-            throw loadError;
-          })
-          .then((xml) => {
-            // Парсим XML и проверяем, что это валидный RSS
-            const parsed = parse(xml);
-            return { normalized, parsed };
+            const error = new Error('invalidRss');
+            error.isParseError = true;
+            error.originalError = loadError;
+            throw error;
           }))
-        .then(({ normalized, parsed }) => {
-          const { feed, posts } = parsed;
+        .then(({ normalized, xml }) => {
+          const { feed, posts } = parse(xml);
 
           state.urls.add(normalized);
           const feedId = genId();
@@ -165,21 +158,13 @@ export default () => {
           input.focus();
         })
         .catch((err) => {
-          // Сначала проверяем ошибку сети
-          if (err.isNetworkError || err.isAxiosError) {
-            setError(i18n.t('feedback.errors.network', 'Ошибка сети'));
-            return;
-          }
-
-          // Проверяем ошибку парсинга
           if (err.isParseError || err.message === 'invalidRss') {
             setError(i18n.t('feedback.errors.invalidRss'));
             return;
           }
 
-          // ValidationError от yup
-          if (err.name === 'ValidationError') {
-            setError(err.message);
+          if (err.isAxiosError) {
+            setError(i18n.t('feedback.errors.network', 'Ошибка сети'));
             return;
           }
 
