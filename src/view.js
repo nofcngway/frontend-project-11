@@ -1,52 +1,18 @@
-const createElement = (tag, options = {}) => {
-  const el = document.createElement(tag)
-
-  if (options.className) {
-    el.className = options.className
-  }
-
-  if (options.textContent) {
-    el.textContent = options.textContent
-  }
-
-  if (options.href) {
-    el.href = options.href
-  }
-
-  if (options.target) {
-    el.target = options.target
-  }
-
-  if (options.rel) {
-    el.rel = options.rel
-  }
-
-  if (options.type) {
-    el.type = options.type
-  }
-
-  if (options.dataset) {
-    Object.entries(options.dataset).forEach(([key, value]) => {
-      el.dataset[key] = value
-    })
-  }
-
-  return el
-}
-
 const createCard = (title) => {
-  const card = createElement('div', { className: 'card border-0' })
-  const body = createElement('div', { className: 'card-body' })
-  const h2 = createElement('h2', {
-    className: 'card-title h4',
-    textContent: title,
-  })
+  const card = document.createElement('div')
+  card.className = 'card border-0'
+
+  const body = document.createElement('div')
+  body.className = 'card-body'
+
+  const h2 = document.createElement('h2')
+  h2.className = 'card-title h4'
+  h2.textContent = title
 
   body.append(h2)
 
-  const list = createElement('ul', {
-    className: 'list-group border-0 rounded-0',
-  })
+  const list = document.createElement('ul')
+  list.className = 'list-group border-0 rounded-0'
 
   return { card, body, list }
 }
@@ -58,19 +24,16 @@ export const renderFeeds = (container, feeds) => {
   const { card, body, list } = createCard('Фиды')
 
   feeds.forEach((feed) => {
-    const li = createElement('li', {
-      className: 'list-group-item border-0 border-end-0',
-    })
+    const li = document.createElement('li')
+    li.className = 'list-group-item border-0 border-end-0'
 
-    const title = createElement('h3', {
-      className: 'h6 m-0',
-      textContent: feed.title,
-    })
+    const title = document.createElement('h3')
+    title.className = 'h6 m-0'
+    title.textContent = feed.title
 
-    const description = createElement('p', {
-      className: 'm-0 small text-black-50',
-      textContent: feed.description,
-    })
+    const description = document.createElement('p')
+    description.className = 'm-0 small text-black-50'
+    description.textContent = feed.description
 
     li.append(title, description)
     list.append(li)
@@ -87,31 +50,26 @@ export const renderPosts = (container, posts, state) => {
   const { card, body, list } = createCard('Посты')
 
   posts.forEach((post) => {
-    const li = createElement('li', {
-      className: 'list-group-item d-flex justify-content-between align-items-start border-0 border-end-0',
-    })
+    const li = document.createElement('li')
+    li.className = 'list-group-item d-flex justify-content-between align-items-start border-0 border-end-0'
 
     const isRead = state.ui.read.has(post.id)
 
-    const link = createElement('a', {
-      href: post.link,
-      target: '_blank',
-      rel: 'noopener noreferrer',
-      className: isRead ? 'fw-normal link-secondary' : 'fw-bold',
-      textContent: post.title,
-      dataset: { id: post.id },
-    })
+    const link = document.createElement('a')
+    link.setAttribute('href', post.link)
+    link.setAttribute('target', '_blank')
+    link.setAttribute('rel', 'noopener noreferrer')
+    link.className = isRead ? 'fw-normal link-secondary' : 'fw-bold'
+    link.textContent = post.title
+    link.dataset.id = post.id
 
-    const button = createElement('button', {
-      type: 'button',
-      className: 'btn btn-outline-primary btn-sm',
-      textContent: 'Просмотр',
-      dataset: {
-        id: post.id,
-        bsToggle: 'modal',
-        bsTarget: '#modal',
-      },
-    })
+    const button = document.createElement('button')
+    button.setAttribute('type', 'button')
+    button.className = 'btn btn-outline-primary btn-sm'
+    button.textContent = 'Просмотр'
+    button.dataset.id = post.id
+    button.dataset.bsToggle = 'modal'
+    button.dataset.bsTarget = '#modal'
 
     li.append(link, button)
     list.append(li)
@@ -136,7 +94,7 @@ const showModal = (post) => {
 
   if (titleEl) titleEl.textContent = post.title
   if (bodyEl) bodyEl.textContent = post.description
-  if (linkEl) linkEl.href = post.link
+  if (linkEl) linkEl.setAttribute('href', post.link)
 }
 
 export const bindPostsInteractions = (container, state) => {
